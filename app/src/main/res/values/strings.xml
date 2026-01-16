@@ -1,3 +1,29 @@
 <resources>
     <string name="app_name">finalproject_209</string>
+    <string name="name_app">WhimsyWhisk</string>
+    <string name="login">Login</string>
+    <string name="home">Home</string>
+    <string name="product">Product</string>
+    <string name="gagal">Gagal</string>
+    <string name="retry">Ulangi</string>
+    <string name="load">Loading</string>
+    <string name="cart_page">Halaman Keranjang</string>
+    <string name="prod_page">Halaman Product</string>
+    <string name="prod_detail">Detail Product</string>
+    <string name="prod_edit">Edit Product</string>
+    <string name="prod_entry">Entry Product</string>
+    <string name="pesanan_page">Halaman Pesanan</string>
+    <string name="pesanan_detail">Detail Pesanan</string>
+    <string name="pesanan_edit">Edit Pesanan</string>
+    <string name="pesanan_entry">Entry Pesanan</string>
+    <string name="back">Kembali</string>
+    <string name="attention">Perhatian !</string>
+    <string name="tanya">Apakah yakin akan menghapus ini ?</string>
+    <string name="no">Tidak</string>
+    <string name="yes">Ya</string>
+    <string name="prod_name">Nama Produk:</string>
+    <string name="prod_desc">Deskripsi Produk:</string>
+    <string name="prod_stok">Stok Produk:</string>
+    <string name="prod_price">Harga Produk:</string>
+    <string name="prod_cat">Kategori Produk:</string>
 </resources>
