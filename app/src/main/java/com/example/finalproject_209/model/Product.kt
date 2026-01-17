@@ -38,7 +38,8 @@ enum class Kategori {
 
 data class UiStateProduct(
     val detailProduct: DetailProduct = DetailProduct(),
-    val isEntryValid: Boolean = true
+    val isEntryValid: Boolean = true,
+    val validation: ValidasiProductField = ValidasiProductField()
 )
 
 data class DetailProduct(
@@ -75,7 +76,7 @@ fun DataProduct.toDetailProduct(): DetailProduct = DetailProduct(
     kategori = kategori,
     image = image
 )
-data class ValidasiProductFieldProduct(
+data class ValidasiProductField(
     val errorNama: String? = null,
     val errorPrice: String? = null,
     val errorDesc: String? = null,
@@ -88,18 +89,18 @@ data class ValidasiProductFieldProduct(
             .all { it == null }
 }
 
-fun validasiInputPerField(product: DetailProduct): ValidasiProductFieldProduct {
-    return ValidasiProductFieldProduct(
+fun validasiInputPerField(product: DetailProduct): ValidasiProductField {
+    return ValidasiProductField(
         errorNama = when {
             product.nama.isBlank() -> "Nama product wajib diisi"
             product.nama.length < 3 -> "Nama product minimal 3 karakter"
             !product.nama.all { it.isLetter() || it.isWhitespace() } -> "Nama hanya boleh huruf dan spasi"
             else -> null
         },
-        errorPrice = if (product.price < 0) "Harga harus lebih dari 0" else null,
+        errorPrice = if (product.price <= 0) "Harga harus lebih dari 0" else null,
         errorDesc = if (product.desc.isBlank()) "Description wajib diisi" else null,
         errorStok = if (product.stok < 0 ) "Stok tidak boleh negatif" else null,
-        errorKategori = if(product.kategori !in Kategori.values()) "Kategori tidak valid"  else null,
+        errorKategori = null,
         errorImage = if (product.image.isBlank())"Gambar wajib diisi" else null
     )
 }
