@@ -8,6 +8,7 @@
     <string name="retry">Ulangi</string>
     <string name="load">Loading</string>
     <string name="cart_page">Halaman Keranjang</string>
+    <string name="prof_page">Halaman Profile</string>
     <string name="prod_page">Halaman Product</string>
     <string name="prod_detail">Detail Product</string>
     <string name="prod_edit">Edit Product</string>
