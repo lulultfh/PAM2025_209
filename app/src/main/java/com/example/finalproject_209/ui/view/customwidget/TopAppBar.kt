@@ -61,11 +61,8 @@ fun BakeryTopBar(
                 Image(
                     painter = painterResource(R.drawable.logo_green),
                     contentDescription = "Logo",
-                    modifier = Modifier.size(50.dp)
+                    modifier = Modifier.size(100.dp)
                 )
-                Text("Halo,", color = Color.White, fontSize = 14.sp)
-                Text("User!", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
