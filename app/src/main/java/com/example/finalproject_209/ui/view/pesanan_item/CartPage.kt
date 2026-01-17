@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ import coil.compose.AsyncImage
 import com.example.finalproject_209.R
 import com.example.finalproject_209.ui.view.ErrorScreen
 import com.example.finalproject_209.ui.view.LoadingScreen
+import com.example.finalproject_209.ui.view.customwidget.BakeryMessageBar
 import com.example.finalproject_209.ui.view.customwidget.BakeryTopBar
 import com.example.finalproject_209.ui.view.imageBaseUrl
 import com.example.finalproject_209.ui.view.route.pesanan_item.DestinasiItemPesanan
@@ -67,7 +69,8 @@ fun DaftarPesananItemScreen(
 ) {
     val uiState = viewModel.listItemPesanan
     val context = LocalContext.current
-
+    val message by viewModel.message.collectAsState()
+    val isError by viewModel.isErrorMessage.collectAsState()
     Scaffold(
         topBar = {
             BakeryTopBar(
@@ -77,35 +80,46 @@ fun DaftarPesananItemScreen(
             )
         }
     ) { innerPadding ->
-        when (uiState) {
-            is DaftarItemPesananUiState.Loading -> LoadingScreen()
-            is DaftarItemPesananUiState.Error -> ErrorScreen(retryAction = { viewModel.LoadPesananItem() })
-            is DaftarItemPesananUiState.Success -> {
-                if (uiState.join.isEmpty()) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("Keranjang belanja kosong", color = colorResource(R.color.pink2))
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colorResource(R.color.pink1))
+                .padding(innerPadding)
+        ){
+            when (uiState) {
+                is DaftarItemPesananUiState.Loading -> LoadingScreen()
+                is DaftarItemPesananUiState.Error -> ErrorScreen(retryAction = { viewModel.LoadPesananItem() })
+                is DaftarItemPesananUiState.Success -> {
+                    if (uiState.join.isEmpty()) {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("Keranjang belanja kosong", color = colorResource(R.color.pink2))
+                        }
+                    } else {
+                        DaftarPesananItemBody(
+                            items = uiState.join,
+                            totalHarga = viewModel.getTotal(uiState.join),
+                            onIncrease = { join ->
+                                join.product?.let { viewModel.IncreaseQty(join.pesananItem, it.price) }
+                            },
+                            onDecrease = { join ->
+                                join.product?.let { viewModel.DecreaseQty(join.pesananItem, it.price) }
+                            },
+                            onUpdateCustName = { id, name -> viewModel.updateCustName(id, name) },
+                            onCheckout = {
+                                viewModel.checkout()
+                                android.widget.Toast.makeText(context, "Pembayaran Berhasil!", android.widget.Toast.LENGTH_SHORT).show()
+                                onPaymentSuccess()
+                            }
+                        )
                     }
-                } else {
-                    DaftarPesananItemBody(
-                        items = uiState.join,
-                        totalHarga = viewModel.getTotal(uiState.join),
-                        onIncrease = { join ->
-                            join.product?.let { viewModel.IncreaseQty(join.pesananItem, it.price) }
-                        },
-                        onDecrease = { join ->
-                            join.product?.let { viewModel.DecreaseQty(join.pesananItem, it.price) }
-                        },
-                        onUpdateCustName = { id, name -> viewModel.updateCustName(id, name) },
-                        onCheckout = {
-                            viewModel.checkout()
-                            android.widget.Toast.makeText(context, "Pembayaran Berhasil!", android.widget.Toast.LENGTH_SHORT).show()
-                            onPaymentSuccess()
-                        },
-                        modifier = Modifier
-                            .background(colorResource(R.color.pink1))
-                            .padding(innerPadding)
-                    )
                 }
+            }
+            message?.let {
+                BakeryMessageBar(
+                    message = it,
+                    isError = isError,
+                    onDismiss = { viewModel.dismissMessage() }
+                )
             }
         }
     }

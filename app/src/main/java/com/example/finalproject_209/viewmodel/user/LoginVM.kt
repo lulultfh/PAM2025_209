@@ -9,11 +9,20 @@ import com.example.finalproject_209.model.DataUser
 import com.example.finalproject_209.model.LoginRequest
 import com.example.finalproject_209.repository.RepositoryDataUser
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class LoginVM(
     private val repositoryDataUser: RepositoryDataUser
 ) : ViewModel() {
+    private val _message = mutableStateOf<String?>(null)
+    val message: String? get() = _message.value
 
+    private val _isErrorMessage = mutableStateOf(false)
+    val isErrorMessage: Boolean get() = _isErrorMessage.value
+
+    fun dismissMessage() {
+        _message.value = null
+    }
     var uiStateLogin by mutableStateOf(UIStateLogin())
         private set
 
@@ -51,8 +60,11 @@ class LoginVM(
             isSubmitted = true
         )
 
-        if (!errorState.isValid) return false
-
+        if (!errorState.isValid) {
+            _message.value = "Username dan password wajib diisi"
+            _isErrorMessage.value = true
+            return false
+        }
         return try {
             val response = repositoryDataUser.login(
                 LoginRequest(
@@ -66,8 +78,13 @@ class LoginVM(
                     user = response.user,
                     errorState = FormErrorLogin()
                 )
+                _message.value = null
+                _isErrorMessage.value = false
                 true
             } else {
+                _message.value = "Username atau password salah"
+                _isErrorMessage.value = true
+
                 uiStateLogin = uiStateLogin.copy(
                     errorState = FormErrorLogin(
                         username = "Username atau password salah",
@@ -76,17 +93,27 @@ class LoginVM(
                 )
                 false
             }
-        }
-        catch (e: Exception) {
+
+        } catch (e: HttpException) {
+            _message.value = "Username atau password salah"
+            _isErrorMessage.value = true
+
             uiStateLogin = uiStateLogin.copy(
                 errorState = FormErrorLogin(
-                    username = "Error: ${e.message}",
-                    password = "Error: ${e.message}"
+                    username = "Username atau password salah",
+                    password = "Username atau password salah"
                 )
             )
             false
+
+        } catch (e: Exception) {
+            _message.value = "Terjadi kesalahan server"
+            _isErrorMessage.value = true
+            false
         }
     }
+
+
 
     private fun validasiinput(login: DetailLogin): FormErrorLogin {
         return FormErrorLogin(

@@ -17,6 +17,8 @@ import com.example.finalproject_209.model.toUiStateProduct
 import com.example.finalproject_209.model.validasiInputPerField
 import com.example.finalproject_209.repository.RepositoryDataProduct
 import com.example.finalproject_209.ui.view.route.product.DestinasiDetailProduct
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -30,7 +32,15 @@ class EditProductVM(
 ) : ViewModel() {
     var uiStateProduct by mutableStateOf(UiStateProduct())
         private set
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message
 
+    private val _isErrorMessage = MutableStateFlow(false)
+    val isErrorMessage: StateFlow<Boolean> = _isErrorMessage
+
+    fun dismissMessage() {
+        _message.value = null
+    }
     private val idProduct: Int = checkNotNull(savedStateHandle[DestinasiDetailProduct.itemIdArg])
 
     init {
@@ -49,10 +59,14 @@ class EditProductVM(
         val validasiField = validasiInputPerField(product)
 
         if (!validasiField.isValid) {
-            uiStateProduct = uiStateProduct.copy(isEntryValid = false, validation = validasiField)
+            uiStateProduct = uiStateProduct.copy(
+                isEntryValid = false,
+                validation = validasiField
+            )
+            _message.value = "Periksa kembali inputan"
+            _isErrorMessage.value = true
             return false
         }
-
         return try {
             val namaBody = product.nama.toRequestBody("text/plain".toMediaType())
             val priceBody = product.price.toString().toRequestBody("text/plain".toMediaType())
@@ -68,13 +82,21 @@ class EditProductVM(
                 val requestFile = fileBytes?.toRequestBody(type.toMediaTypeOrNull())
                 requestFile?.let { MultipartBody.Part.createFormData("image", "update.jpg", it) }
             } else null
-
-            // Panggil repository fungsi multipart (kamu perlu menambahkannya di repo juga)
             val response = repositoryDataProduct.updateProductMultipart(
                 idProduct, namaBody, priceBody, descBody, stokBody, kategoriBody, imagePart
             )
-            response.isSuccessful
+            if (response.isSuccessful) {
+                _message.value = "Produk berhasil diperbarui"
+                _isErrorMessage.value = false
+                true
+            } else {
+                _message.value = "Gagal update produk"
+                _isErrorMessage.value = true
+                false
+            }
         } catch (e: Exception) {
+            _message.value = "Terjadi kesalahan jaringan"
+            _isErrorMessage.value = true
             false
         }
     }

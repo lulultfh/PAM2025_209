@@ -15,6 +15,7 @@ import com.example.finalproject_209.repository.RepositoryDataPesanan
 import com.example.finalproject_209.repository.RepositoryDataProduct
 import com.example.finalproject_209.viewmodel.pesanan.DaftarPesananUiState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -36,6 +37,15 @@ class DaftarPesananItemVM(
     var namaCustInput by mutableStateOf("")
     var listItemPesanan: DaftarItemPesananUiState by mutableStateOf(DaftarItemPesananUiState.Loading)
         private set
+    private val _message = MutableStateFlow<String?>(null)
+    val message: StateFlow<String?> = _message
+
+    private val _isErrorMessage = MutableStateFlow(false)
+    val isErrorMessage: StateFlow<Boolean> = _isErrorMessage
+
+    fun dismissMessage() {
+        _message.value = null
+    }
     private val _data = MutableStateFlow<List<Join>>(emptyList())
     init {
         LoadPesananItem()
@@ -71,15 +81,18 @@ class DaftarPesananItemVM(
                 val newQty = item.qty + 1
                 val newSubTotal = newQty * harga
 
-                // Pastikan repository.editItemPesanan kamu mengirim body JSON: { "qty": newQty, "subtotal": newSubTotal }
                 repositoryDataItemPesanan.editItemPesanan(
                     id = item.id,
                     qty = newQty,
                     subtotal = newSubTotal
                 )
+                _message.value = "Jumlah produk ditambahkan"
+                _isErrorMessage.value = false
 
                 LoadPesananItem() // Refresh UI
             } catch (e: Exception) {
+                _message.value = "Gagal menambah jumlah produk"
+                _isErrorMessage.value = true
                 listItemPesanan = DaftarItemPesananUiState.Error
             }
         }
@@ -91,11 +104,19 @@ class DaftarPesananItemVM(
                     val newQty = item.qty - 1
                     val newSubTotal = newQty * harga
                     repositoryDataItemPesanan.editItemPesanan(item.id, newQty, newSubTotal)
+
+                    _message.value = "Jumlah produk dikurangi"
+                    _isErrorMessage.value = false
                 } else {
                     RemoveItem(item)
+
+                    _message.value = "Produk dihapus dari keranjang"
+                    _isErrorMessage.value = false
                 }
-                LoadPesananItem() // Refresh data
+                LoadPesananItem()
             } catch (e: Exception) {
+                _message.value = "Gagal mengurangi produk"
+                _isErrorMessage.value = true
                 println("Error Decrease: ${e.message}")
             }
         }
@@ -126,30 +147,39 @@ class DaftarPesananItemVM(
         viewModelScope.launch {
             try {
                 val items = _data.value
-                if (items.isNotEmpty()) {
+                if (items.isEmpty()) {
+                    _message.value = "Keranjang masih kosong"
+                    _isErrorMessage.value = true
+                } else {
                     val pesanan = items.first().pesanan
-                    if (pesanan != null && pesanan.namaCust.isNotBlank()) {
-                        val totalHarga = getTotal(items) // 1. Hitung total dari keranjang
-                        val namaFix = if (namaCustInput.isNotBlank()) namaCustInput else pesanan.namaCust
+                    if (pesanan == null || pesanan.namaCust.isBlank()) {
+                        _message.value = "Nama customer wajib diisi"
+                        _isErrorMessage.value = true
+                    } else {
+                        val totalHarga = getTotal(items)
+                        val namaFix =
+                            if (namaCustInput.isNotBlank()) namaCustInput else pesanan.namaCust
+
                         val dataPesananBaru = pesanan.copy(
                             namaCust = namaFix,
-                            total_harga = totalHarga, // 2. Masukkan ke objek pesanan
+                            total_harga = totalHarga,
                             status = Status.finish
                         )
 
-                        // 3. Kirim ke backend (Sekarang membawa total_harga asli, bukan 0)
                         repositoryDataPesanan.editPesanan(pesanan.id, dataPesananBaru)
 
-                        // 4. Bersihkan keranjang
-//                        items.forEach {
-//                            repositoryDataItemPesanan.hapusItemPesanan(it.pesananItem.id)
-//                        }
+                        _message.value = "Checkout berhasil"
+                        _isErrorMessage.value = false
+
                         LoadPesananItem()
                     }
                 }
             } catch (e: Exception) {
+                _message.value = "Checkout gagal"
+                _isErrorMessage.value = true
                 println("Gagal checkout: ${e.message}")
             }
         }
     }
+
 }

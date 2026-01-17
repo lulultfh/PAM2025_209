@@ -40,13 +40,20 @@ class HomeVM(
 ) : ViewModel() {
     private val _searchText = MutableStateFlow("")
     val searchText = _searchText.asStateFlow()
-
     private val _selectedKategori = MutableStateFlow<Kategori?>(null)
     val selectedKategori = _selectedKategori.asStateFlow()
-
     private val _dataSource = MutableStateFlow<List<DataProduct>>(emptyList())
     private val _event = MutableSharedFlow<HomeEvent>()
     val event = _event.asSharedFlow()
+    private val _message = MutableStateFlow<String?>(null)
+    val message = _message.asStateFlow()
+
+    private val _isErrorMessage = MutableStateFlow(false)
+    val isErrorMessage = _isErrorMessage.asStateFlow()
+
+    fun dismissMessage() {
+        _message.value = null
+    }
     val products = combine(
         searchText.debounce(400),
         _dataSource,
@@ -95,67 +102,40 @@ class HomeVM(
     fun onKategoriSelected(kategori: Kategori?) {
         _selectedKategori.value = kategori
     }
-//    fun addToPesananItem(product: DataProduct) {
-//        viewModelScope.launch {
-//            try {
-//                if (product.stok > 0) {
-//                    val updatedProduct = product.copy(stok = product.stok - 1)
-//                    repositoryDataProduct.editProduct(product.id, updatedProduct)
-//                    val cartItems = repositoryDataItemPesanan.getAllItemPesanan()
-//                    val existingItem = cartItems.find {
-//                        it.product_id == product.id && it.pesanan_id == 0
-//                    }
-//                    if (existingItem != null) {
-//                        val newQty = existingItem.qty + 1
-//                        repositoryDataItemPesanan.editItemPesanan(
-//                            id = existingItem.id,
-//                            qty = newQty,
-//                            subtotal = newQty * product.price
-//                        )
-//                    } else {
-//                        repositoryDataItemPesanan.tambahItemPesanan(
-//                            DataPesananItem(
-//                                id = 0,
-//                                pesanan_id = 0, // 0 menandakan belum di-checkout menjadi transaksi
-//                                product_id = product.id,
-//                                qty = 1,
-//                                subtotal = product.price
-//                            )
-//                        )
-//                    }
-//                    _event.emit(HomeEvent.AddedToCart)
-//                    loadProducts()
-//                } else {
-//                    _event.emit(HomeEvent.OutOfStock)
-//                }
-//            } catch (e: Exception) {
-//                _event.emit(HomeEvent.Error("Gagal masuk keranjang: ${e.message}"))
-//            }
-//        }
-//    }
-fun addToPesananItem(product: DataProduct) {
-    viewModelScope.launch {
-        try {
-            if (product.stok > 0) {
-                // Langsung kurangi stok di database produk
-                repositoryDataProduct.editProduct(product.id, product.copy(stok = product.stok - 1))
+    fun addToPesananItem(product: DataProduct) {
+        viewModelScope.launch {
+            try {
+                if (product.stok > 0) {
 
-                // Kirim HANYA info produk, biarkan Backend cari pesanan_id nya
-                repositoryDataItemPesanan.tambahItemPesanan(
-                    DataPesananItem(
-                        id = 0,
-                        pesanan_id = 0, // Abaikan saja, Backend akan menimpa ini
-                        product_id = product.id,
-                        qty = 1,
-                        subtotal = product.price
+                    repositoryDataProduct.editProduct(
+                        product.id,
+                        product.copy(stok = product.stok - 1)
                     )
-                )
-                _event.emit(HomeEvent.AddedToCart)
-                loadProducts()
+
+                    repositoryDataItemPesanan.tambahItemPesanan(
+                        DataPesananItem(
+                            id = 0,
+                            pesanan_id = 0,
+                            product_id = product.id,
+                            qty = 1,
+                            subtotal = product.price
+                        )
+                    )
+
+                    _message.value = "Berhasil ditambahkan ke keranjang 🛒"
+                    _isErrorMessage.value = false
+
+                    loadProducts()
+
+                } else {
+                    _message.value = "Stok produk habis"
+                    _isErrorMessage.value = true
+                }
+
+            } catch (e: Exception) {
+                _message.value = "Gagal menambahkan produk"
+                _isErrorMessage.value = true
             }
-        } catch (e: Exception) {
-            _event.emit(HomeEvent.Error("Gagal: ${e.message}"))
         }
     }
-}
 }

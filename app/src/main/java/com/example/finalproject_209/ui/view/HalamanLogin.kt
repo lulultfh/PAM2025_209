@@ -50,9 +50,11 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.finalproject_209.R
 import com.example.finalproject_209.ui.theme.InterFont
+import com.example.finalproject_209.ui.view.customwidget.BakeryMessageBar
 import com.example.finalproject_209.viewmodel.provider.PenyediaViewModel
 import com.example.finalproject_209.viewmodel.user.LoginVM
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,12 +65,8 @@ fun Login(
 ) {
     val uiStateLogin = viewModel.uiStateLogin
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
-//    LaunchedEffect(uiStateLogin.user) {
-//        if (uiStateLogin.user != null) {
-//            onSubmit()
-//        }
-//    }
-
+    val message = viewModel.message
+    val isError = viewModel.isErrorMessage
     Scaffold { innerPadding ->
         Box(
             modifier = Modifier
@@ -196,7 +194,6 @@ fun Login(
                     uiStateLogin.errorState.password?.let {
                         Text(it, color = Color.Red, fontSize = 12.sp)
                     }
-
                     Spacer(Modifier.height(24.dp))
 
                     // BUTTON DI DALAM CARD
@@ -221,6 +218,21 @@ fun Login(
                             fontFamily = FontFamily(Font(R.font.inter))
                         )
                     }
+                }
+            }
+            message?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(top = innerPadding.calculateTopPadding())
+                        .zIndex(1f)
+                ) {
+                    BakeryMessageBar(
+                        message = it,
+                        isError = isError,
+                        onDismiss = { viewModel.dismissMessage() }
+                    )
                 }
             }
         }

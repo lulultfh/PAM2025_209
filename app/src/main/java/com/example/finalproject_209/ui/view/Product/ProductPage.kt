@@ -62,6 +62,7 @@ import com.example.finalproject_209.model.Kategori
 import com.example.finalproject_209.repository.BakeryContainer
 import com.example.finalproject_209.repository.WhimsyWhisk
 import com.example.finalproject_209.ui.customwidget.ProductQuickviewDialog
+import com.example.finalproject_209.ui.view.customwidget.BakeryMessageBar
 import com.example.finalproject_209.ui.view.customwidget.BakeryTopBar
 import com.example.finalproject_209.ui.view.customwidget.BottomBarNav
 import com.example.finalproject_209.ui.view.route.product.DestinasiProduct
@@ -89,6 +90,8 @@ fun ProductScreen(
     val selectedKategori by viewModel.selectedKategori.collectAsState()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     var showQuickviewByProduct by remember { mutableStateOf<DataProduct?>(null) }
+    val message by viewModel.message.collectAsState()
+    val isError by viewModel.isErrorMessage.collectAsState()
 
     Scaffold(
         topBar = {
@@ -123,26 +126,39 @@ fun ProductScreen(
             )
         }
     ) { innerPadding ->
-        ProductBody(
-            statusUiProductVM = uiState,
-            products = filteredProducts, // Kirim data hasil filter
-            selectedKategori = selectedKategori,
-            onSelectedKategori = viewModel::onKategoriSelected,
-            onProduct = { product ->
-                showQuickviewByProduct = product },
-            onEdit = navigateToEdit,
-            onDelete = { viewModel.deleteProduct(it) },
-            retryAction = {},
+        Box(
             modifier = Modifier
-                .background(colorResource(R.color.pink1))
-                .padding(innerPadding)
                 .fillMaxSize()
-        )
-        showQuickviewByProduct?.let { product ->
-            ProductQuickviewDialog(
-                product = product,
-                onDismiss = { showQuickviewByProduct = null }
+                .background(colorResource(R.color.pink1))
+        ){
+            ProductBody(
+                statusUiProductVM = uiState,
+                products = filteredProducts, // Kirim data hasil filter
+                selectedKategori = selectedKategori,
+                onSelectedKategori = viewModel::onKategoriSelected,
+                onProduct = { product ->
+                    showQuickviewByProduct = product },
+                onEdit = navigateToEdit,
+                onDelete = { viewModel.deleteProduct(it) },
+                retryAction = {},
+                modifier = Modifier
+                    .background(colorResource(R.color.pink1))
+                    .padding(innerPadding)
+                    .fillMaxSize()
             )
+            message?.let {
+                BakeryMessageBar(
+                    message = it,
+                    isError = isError,
+                    onDismiss = { viewModel.dismissMessage() }
+                )
+            }
+            showQuickviewByProduct?.let { product ->
+                ProductQuickviewDialog(
+                    product = product,
+                    onDismiss = { showQuickviewByProduct = null }
+                )
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ interface RepositoryDataProduct{
     suspend fun getDataProduct(): List<DataProduct>
     suspend fun getDetailProduct(id: Int): DataProduct
 //    suspend fun tambahProduct(dataProduct: DataProduct):retrofit2.Response<Void>
-//    suspend fun editProduct(id: Int, dataProduct: DataProduct):retrofit2.Response<Void>
+    suspend fun editProduct(id: Int, dataProduct: DataProduct):retrofit2.Response<Void>
     suspend fun hapusProduct(id: Int): retrofit2.Response<Void>
     suspend fun tambahProductMultipart(
         nama: RequestBody, price: RequestBody, desc: RequestBody,
@@ -29,7 +29,7 @@ class NetworkProductRepo(
     override suspend fun getDataProduct(): List<DataProduct> = serviceApiBakery.getAllProduct()
     override suspend fun getDetailProduct(id: Int): DataProduct = serviceApiBakery.getProductById(id)
 //    override suspend fun tambahProduct(dataProduct: DataProduct): Response<Void> = serviceApiBakery.tambahProduct(dataProduct)
-//    override suspend fun editProduct(id: Int, dataProduct: DataProduct): Response<Void> = serviceApiBakery.updateProduct(id, dataProduct)
+    override suspend fun editProduct(id: Int, dataProduct: DataProduct): Response<Void> = serviceApiBakery.updateProduct(id, dataProduct)
     override suspend fun hapusProduct(id: Int): Response<Void> = serviceApiBakery.hapusProduct(id)
     override suspend fun tambahProductMultipart(
         nama: RequestBody, price: RequestBody, desc: RequestBody,

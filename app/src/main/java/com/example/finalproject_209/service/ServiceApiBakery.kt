@@ -66,6 +66,11 @@ interface ServiceApiBakery{
         @Part("kategori") kategori: RequestBody,
         @Part image: MultipartBody.Part? // Dibuat opsional jika gambar tidak diganti
     ): retrofit2.Response<Void>
+
+
+    @PUT("product/{id}")
+    suspend fun updateProduct(@Path("id") id: Int, @Body dataProduct: DataProduct):retrofit2.Response<Void>
+
     @DELETE("product/{id}")
     suspend fun hapusProduct(@Path("id") id: Int): retrofit2.Response<Void>
 

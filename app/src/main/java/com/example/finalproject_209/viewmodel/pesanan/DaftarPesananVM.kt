@@ -40,6 +40,15 @@ class DaftarPesananVM(private val repositoryDataPesanan: RepositoryDataPesanan,
     private val repositoryDataProduct: RepositoryDataProduct): ViewModel(){
     var listPesanan: DaftarPesananUiState by mutableStateOf(DaftarPesananUiState.Loading)
         private set
+    private val _message = mutableStateOf<String?>(null)
+    val message: String? get() = _message.value
+
+    private val _isErrorMessage = mutableStateOf(false)
+    val isErrorMessage: Boolean get() = _isErrorMessage.value
+
+    fun dismissMessage() {
+        _message.value = null
+    }
     private var currentFilter: Status? = null
     private val _dataSearch = MutableStateFlow<List<Join>>(emptyList())
     var listDetailItem by mutableStateOf<List<ItemDetailJoin>>(emptyList())
@@ -89,22 +98,35 @@ class DaftarPesananVM(private val repositoryDataPesanan: RepositoryDataPesanan,
     fun updateStatus(pesanan: DataPesanan, status: Status) {
         viewModelScope.launch {
             try {
-                // copy() menjamin total_harga yang lama tetap terbawa, tidak ter-reset
                 val updatedPesanan = pesanan.copy(status = status)
 
                 repositoryDataPesanan.editPesanan(
                     id = pesanan.id,
                     dataPesanan = updatedPesanan
                 )
-                LoadPesanan() // Refresh UI agar badge berubah hijau
+                _message.value = "Status pesanan berhasil diperbarui"
+                _isErrorMessage.value = false
+                LoadPesanan()
             } catch (e: Exception) {
-                println("Gagal update status: ${e.message}")
+                _message.value = "Gagal memperbarui status pesanan"
+                _isErrorMessage.value = true
             }
         }
     }
     fun hapusPesanan(id: Int){
-        viewModelScope.launch { repositoryDataPesanan.hapusPesanan(id)
-        LoadPesanan()}
+        viewModelScope.launch {
+            try {
+                repositoryDataPesanan.hapusPesanan(id)
+
+                _message.value = "Pesanan berhasil dihapus"
+                _isErrorMessage.value = false
+
+                LoadPesanan()
+            } catch (e: Exception) {
+                _message.value = "Gagal menghapus pesanan"
+                _isErrorMessage.value = true
+            }
+        }
     }
     fun filterByStatus(status: Status) {
         viewModelScope.launch {

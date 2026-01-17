@@ -63,6 +63,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.finalproject_209.R
@@ -73,6 +74,7 @@ import com.example.finalproject_209.model.UiStateProduct
 import com.example.finalproject_209.repository.BakeryContainer
 import com.example.finalproject_209.repository.WhimsyWhisk
 import com.example.finalproject_209.ui.customwidget.ProductQuickviewDialog
+import com.example.finalproject_209.ui.view.customwidget.BakeryMessageBar
 import com.example.finalproject_209.ui.view.customwidget.BakeryTopBar
 import com.example.finalproject_209.ui.view.customwidget.BottomBarNav
 import com.example.finalproject_209.ui.view.route.DestinasiHome
@@ -92,6 +94,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeVM = viewModel(factory = PenyediaViewModel.Factory)
 ){
+    val message by viewModel.message.collectAsState()
+    val isError by viewModel.isErrorMessage.collectAsState()
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val searchText by viewModel.searchText.collectAsState()
@@ -150,27 +154,44 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-        HomeBody(
-            statusUiProduct = uiState,
-            products = products,
-            onProductClick = { product ->
-                showQuickviewByProduct = product
-            },
-            onAddToCart = {product ->
-                viewModel.addToPesananItem(product)
-            },
-            retryAction = {},
-            selectedKategori = selectedKategori,
-            onSelectedKategori = viewModel::onKategoriSelected,
+        Box(
             modifier = Modifier
+                .fillMaxSize()
                 .background(colorResource(R.color.pink1))
-                .padding(innerPadding)
-        )
-        showQuickviewByProduct?.let { product ->
-            ProductQuickviewDialog(
-                product = product,
-                onDismiss = { showQuickviewByProduct = null }
+        ) {
+            HomeBody(
+                statusUiProduct = uiState,
+                products = products,
+                onProductClick = { showQuickviewByProduct = it },
+                onAddToCart = { viewModel.addToPesananItem(it) },
+                retryAction = {},
+                selectedKategori = selectedKategori,
+                onSelectedKategori = viewModel::onKategoriSelected,
+                modifier = Modifier.padding(innerPadding)
             )
+
+            message?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(top = innerPadding.calculateTopPadding())
+                        .zIndex(1f)
+                ) {
+                    BakeryMessageBar(
+                        message = it,
+                        isError = isError,
+                        onDismiss = { viewModel.dismissMessage() }
+                    )
+                }
+            }
+
+            showQuickviewByProduct?.let {
+                ProductQuickviewDialog(
+                    product = it,
+                    onDismiss = { showQuickviewByProduct = null }
+                )
+            }
         }
     }
 }

@@ -33,6 +33,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.finalproject_209.R
@@ -57,6 +59,7 @@ import com.example.finalproject_209.model.DetailProduct
 import com.example.finalproject_209.model.Kategori
 import com.example.finalproject_209.model.UiStateProduct
 import com.example.finalproject_209.model.ValidasiProductField
+import com.example.finalproject_209.ui.view.customwidget.BakeryMessageBar
 import com.example.finalproject_209.ui.view.customwidget.BakeryTopBar
 import com.example.finalproject_209.ui.view.route.product.DestinasiEntryProduct
 import com.example.finalproject_209.viewmodel.product.EntryProductVM
@@ -71,7 +74,9 @@ fun EntryProductScreen(
 ) {
     val uiState = viewModel.uiStateProduct
     val coroutineScope = rememberCoroutineScope()
-    val context = LocalContext.current // Tambahkan context untuk Toast
+    val context = LocalContext.current
+    val message by viewModel.message.collectAsState()
+    val isError by viewModel.isErrorMessage.collectAsState()
     Scaffold(
         topBar = {
             BakeryTopBar(
@@ -81,22 +86,41 @@ fun EntryProductScreen(
             )
         }
     ) { innerPadding ->
-        EntryProductBody(
-            uiStateProduct = uiState,
-            onValueChange = viewModel::updateUiStateProduct,
-            onSaveClick = {
-                coroutineScope.launch {
-                    // Kirim context ke ViewModel
-                    if (viewModel.addProduct(context)) {
-                        android.widget.Toast.makeText(context, "Produk Berhasil Disimpan!", android.widget.Toast.LENGTH_SHORT).show()
-                        navigateBack()
-                    } else {
-                        android.widget.Toast.makeText(context, "Gagal Simpan! Periksa Gambar atau Koneksi.", android.widget.Toast.LENGTH_LONG).show()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ){
+            EntryProductBody(
+                uiStateProduct = uiState,
+                onValueChange = viewModel::updateUiStateProduct,
+                onSaveClick = {
+                    coroutineScope.launch {
+                        if (viewModel.addProduct(context)) {
+                            android.widget.Toast.makeText(context, "Produk Berhasil Disimpan!", android.widget.Toast.LENGTH_SHORT).show()
+                            navigateBack()
+                        } else {
+                            android.widget.Toast.makeText(context, "Gagal Simpan! Periksa Gambar atau Koneksi.", android.widget.Toast.LENGTH_LONG).show()
+                        }
                     }
+                },
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            )
+            message?.let {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .zIndex(1f)
+                ) {
+                    BakeryMessageBar(
+                        message = it,
+                        isError = isError,
+                        onDismiss = { viewModel.dismissMessage() }
+                    )
                 }
-            },
-            modifier = Modifier.padding(innerPadding).verticalScroll(rememberScrollState())
-        )
+            }
+        }
     }
 }
 

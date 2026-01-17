@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.finalproject_209.model.DataProduct
 import com.example.finalproject_209.model.Kategori
+import com.example.finalproject_209.model.ValidasiProductField
 import com.example.finalproject_209.repository.RepositoryDataProduct
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +40,30 @@ class DaftarProductVM(private val repositoryDataProduct: RepositoryDataProduct)
     val selectedKategori = _selectedKategori.asStateFlow()
     private val _dataSearch = MutableStateFlow<List<DataProduct>>(emptyList())
 
+    private val _message = MutableStateFlow<String?>(null)
+    val message = _message.asStateFlow()
+
+    private val _isErrorMessage = MutableStateFlow(false)
+    val isErrorMessage = _isErrorMessage.asStateFlow()
+
+    fun dismissMessage() {
+        _message.value = null
+    }
+    private fun showValidationMessage(validation: ValidasiProductField) {
+        val firstError = listOf(
+            validation.errorNama,
+            validation.errorPrice,
+            validation.errorDesc,
+            validation.errorStok,
+            validation.errorKategori,
+            validation.errorImage
+        ).firstOrNull { it != null }
+
+        if (firstError != null) {
+            _message.value = firstError
+            _isErrorMessage.value = true
+        }
+    }
     val products = combine(
         _searchText, // Langsung gunakan flow tanpa debounce di awal agar data tidak kosong saat start
         _dataSearch,

@@ -52,6 +52,7 @@ import com.example.finalproject_209.model.Status
 import com.example.finalproject_209.ui.customwidget.TransaksiQuickviewDialog
 import com.example.finalproject_209.ui.view.Product.ErorScreen
 import com.example.finalproject_209.ui.view.Product.LoadScreen
+import com.example.finalproject_209.ui.view.customwidget.BakeryMessageBar
 import com.example.finalproject_209.ui.view.customwidget.BakeryTopBar
 import com.example.finalproject_209.ui.view.customwidget.BottomBarNav
 import com.example.finalproject_209.ui.view.route.pesanan.DestinasiDaftarPesanan
@@ -70,6 +71,8 @@ fun PesananScreen(
     modifier: Modifier = Modifier,
     viewModel: DaftarPesananVM = viewModel(factory = PenyediaViewModel.Factory)
 ) {
+    var message by remember { mutableStateOf<String?>(null) }
+    var isError by remember { mutableStateOf(false) }
     var selectedPesanan by remember { mutableStateOf<DataPesanan?>(null) }
     var showQuickview by remember { mutableStateOf(false) }
     val uiState = viewModel.listPesanan
@@ -93,28 +96,44 @@ fun PesananScreen(
             )
         }
     ) { innerPadding ->
-        PesananBody(
-            uiState = uiState,
-            onDelete = { join -> viewModel.hapusPesanan(join.pesanan.id) },
-            onPesananClick = { pesanan ->
-                selectedPesanan = pesanan
-                viewModel.loadDetailItem(pesanan.id) // Ambil data pesanan_item
-                showQuickview = true
-            },
-            onStatusChange = { join, status -> viewModel.updateStatus(join.pesanan, status) },
-            onFilterStatus = { viewModel.filterByStatus(it) },
-            retryAction = { viewModel.LoadPesanan() },
+        Box(
             modifier = Modifier
+                .fillMaxSize()
                 .background(colorResource(R.color.pink1))
                 .padding(innerPadding)
-        )
-        if (showQuickview && selectedPesanan != null) {
-            TransaksiQuickviewDialog(
-                pesanan = selectedPesanan!!,
-                items = viewModel.listDetailItem,
-                loadItems = { id -> viewModel.loadDetailItem(id) },
-                onDismiss = { showQuickview = false }
+        ){
+            PesananBody(
+                uiState = uiState,
+                onDelete = { join -> viewModel.hapusPesanan(join.pesanan.id) },
+                onPesananClick = { pesanan ->
+                    selectedPesanan = pesanan
+                    viewModel.loadDetailItem(pesanan.id) // Ambil data pesanan_item
+                    showQuickview = true
+                },
+                onStatusChange = { join, status -> viewModel.updateStatus(join.pesanan, status) },
+                onFilterStatus = { viewModel.filterByStatus(it) },
+                retryAction = { viewModel.LoadPesanan() },
+                modifier = Modifier
+                    .background(colorResource(R.color.pink1))
             )
+            message?.let {
+                BakeryMessageBar(
+                    message = it,
+                    isError = isError,
+                    onDismiss = { message = null }
+//                    modifier = Modifier
+//                        .align(Alignment.TopCenter)
+//                        .padding(top = 8.dp)
+                )
+            }
+            if (showQuickview && selectedPesanan != null) {
+                TransaksiQuickviewDialog(
+                    pesanan = selectedPesanan!!,
+                    items = viewModel.listDetailItem,
+                    loadItems = { id -> viewModel.loadDetailItem(id) },
+                    onDismiss = { showQuickview = false }
+                )
+            }
         }
     }
 }
