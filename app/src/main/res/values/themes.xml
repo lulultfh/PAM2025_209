@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Finalproject_209" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Main Theme -->
+    <style name="Theme.Finalproject_209"
+        parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Splash Theme -->
+    <style name="Theme.Finalproject_209.Splash"
+        parent="Theme.SplashScreen">
+
+        <!-- background -->
+        <item name="windowSplashScreenBackground">@color/pink1</item>
+
+        <!-- logo -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logoaja</item>
+
+        <!-- setelah splash -->
+        <item name="postSplashScreenTheme">@style/Theme.Finalproject_209</item>
+
+    </style>
+
 </resources>
