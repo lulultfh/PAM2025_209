@@ -9,9 +9,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+//import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.finalproject_209.ui.theme.Finalproject_209Theme
+import com.example.finalproject_209.ui.view.uicontroller.DataBakeryApp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,8 +26,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             Finalproject_209Theme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
+                    DataBakeryApp(
+//                        name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
